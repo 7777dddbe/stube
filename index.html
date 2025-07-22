@@ -1,0 +1,128 @@
+RESET: OGNI 2 ORE.
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Form Codici con Reset e Comandi</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { font-size: 1.2em; padding: 8px; margin: 5px 0; }
+    #messaggio { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Inserisci il codice</h2>
+  <form id="formCodice">
+    <input type="text" id="codice" placeholder="Inserisci codice" required autocomplete="off" />
+    <button type="submit">Invia</button>
+  </form>
+  <p id="messaggio"></p>
+
+  <script>
+    const codiciValidi = [
+      "Fede","Giova","Kle"
+    ];
+    const codiciStaff = ["Adolf", "Djscarso", "Ilmioblack"];
+    const codiceOspite = "SONOUNOSPITE";
+    const MAX_USI_OSPITE = 3;
+    const codiceStartReset = "STARTORA777";
+    const codiceResetNow = "RESTART777";
+    const MAX_USI = 5;
+    const DUE_ORE = 2 * 60 * 60 * 1000;
+
+    let contatori = JSON.parse(localStorage.getItem('contatoriCodici')) || {};
+    let resetStart = parseInt(localStorage.getItem('resetStart')) || 0;
+    const oraAttuale = Date.now();
+
+    // Controllo reset timer ogni 2 ore
+    if (resetStart && (oraAttuale - resetStart > DUE_ORE)) {
+      contatori = {};
+      codiciValidi.forEach(c => contatori[c] = 0);
+      contatori[codiceOspite] = 0;
+      localStorage.setItem('contatoriCodici', JSON.stringify(contatori));
+      resetStart = 0;
+      localStorage.removeItem('resetStart');
+    } else {
+      // Inizializza contatori se mancanti
+      codiciValidi.forEach(c => {
+        if (!(c in contatori)) contatori[c] = 0;
+      });
+      if (!(codiceOspite in contatori)) contatori[codiceOspite] = 0;
+    }
+
+    const form = document.getElementById('formCodice');
+    const messaggio = document.getElementById('messaggio');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const inputCodice = document.getElementById('codice').value.trim().toUpperCase();
+
+      // Comando reset timer 2 ore
+      if (inputCodice === codiceStartReset) {
+        resetStart = Date.now();
+        localStorage.setItem('resetStart', resetStart);
+        messaggio.textContent = "Timer reset avviato! Da ora si resetterà ogni 2 ore.";
+        form.reset();
+        return;
+      }
+
+      // Comando reset immediato contatori
+      if (inputCodice === codiceResetNow) {
+        contatori = {};
+        codiciValidi.forEach(c => contatori[c] = 0);
+        contatori[codiceOspite] = 0;
+        localStorage.setItem('contatoriCodici', JSON.stringify(contatori));
+        messaggio.textContent = "Contatori resettati manualmente.";
+        form.reset();
+        return;
+      }
+
+      // Codice ospite max 3 usi
+      if (inputCodice === codiceOspite) {
+        if (contatori[codiceOspite] >= MAX_USI_OSPITE) {
+          messaggio.textContent = "Codice SONOUNOSPITE esaurito, non può più essere usato.";
+          return;
+        }
+        contatori[codiceOspite]++;
+        localStorage.setItem('contatoriCodici', JSON.stringify(contatori));
+        messaggio.textContent = `Codice SONOUNOSPITE accettato. Uso ${contatori[codiceOspite]}/${MAX_USI_OSPITE}`;
+        form.reset();
+        return;
+      }
+
+      // Codici staff senza limiti
+      if (codiciStaff.includes(inputCodice)) {
+        messaggio.textContent = `Codice staff ${inputCodice} accettato senza limiti.`;
+        form.reset();
+        return;
+      }
+
+      // Codici normali max 5 usi
+      if (!codiciValidi.includes(inputCodice)) {
+        messaggio.textContent = "Codice non valido.";
+        return;
+      }
+
+      if (contatori[inputCodice] >= MAX_USI) {
+        messaggio.textContent = "Codice esaurito, non può più essere usato.";
+        return;
+      }
+
+      contatori[inputCodice]++;
+      localStorage.setItem('contatoriCodici', JSON.stringify(contatori));
+      messaggio.textContent = `Codice ${inputCodice} accettato. Uso ${contatori[inputCodice]}/${MAX_USI}`;
+      form.reset();
+    });
+
+    
+//Codice STARTORA777: avvia o riavvia il timer per il reset automatico ogni 2 ore
+//Codice RESTART777: resetta subito tutti i contatori
+//Codice SONOUNOSPITE: max 3 usi
+//10codici normali max 5 usi
+//3 codici staff senza limiti"
+
+
+  </script>
+</body>
+</html>
